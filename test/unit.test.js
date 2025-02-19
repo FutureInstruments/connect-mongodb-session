@@ -5,6 +5,7 @@ const connectMongoDBSession = require('../');
 const ee = require('events').EventEmitter;
 const mongodb = require('mongodb');
 const sinon = require('sinon');
+const { log } = require('console');
 
 describe('connectMongoDBSession', function() {
   var StoreStub;
@@ -63,24 +64,24 @@ describe('connectMongoDBSession', function() {
     done();
   });
 
-  it('specifying options is optional', function(done) {
-    var SessionStore = connectMongoDBSession({ Store: StoreStub });
+  it('specifying options is optional', async function() {
+    var SessionStore = await connectMongoDBSession({ Store: StoreStub });
 
-    var session = new SessionStore(function(error) {
+    var session = await new SessionStore(function(error) {
       assert.ifError(error);
-      done();
+
     });
     assert.equal(session.options.uri, 'mongodb://127.0.0.1:27017/test');
   });
 
-  it('uses default options and no callback if no args passed', function(done) {
-    var SessionStore = connectMongoDBSession({ Store: StoreStub });
+  it('uses default options and no callback if no args passed', async function() {
+    var SessionStore = await connectMongoDBSession({ Store: StoreStub });
 
-    var session = new SessionStore();
+    var session = await new SessionStore();
     assert.equal(session.options.uri, 'mongodb://127.0.0.1:27017/test');
 
     session.on('connected', function() {
-      done();
+
     });
   });
 
@@ -119,16 +120,16 @@ describe('connectMongoDBSession', function() {
     });
   });
 
-  it('handles index errors', function(done) {
-    var SessionStore = connectMongoDBSession({ Store: StoreStub });
+  it('handles index errors', async function() {
+    var SessionStore = await connectMongoDBSession({ Store: StoreStub });
 
     sinon.stub(mongodb.Collection.prototype, 'createIndex').callsFake(() => {
       return Promise.reject(new Error('Index fail'));
     });
 
     var session = new SessionStore(function(error) {
+      log(error);
       assert.equal(error.message, 'Error creating index: Index fail');
-      done();
     });
   });
 

@@ -3,6 +3,7 @@
 var assert = require('assert');
 var superagent = require('superagent');
 var mongodb = require('mongodb');
+const { log } = require('console');
 
 /**
  *  This module exports a single function which takes an instance of connect
@@ -14,16 +15,23 @@ describe('MongoDBStore', function() {
   var server;
 
   beforeEach(async function() {
+//    log('before each');
     const client = await mongodb.MongoClient.connect(
       'mongodb://127.0.0.1:27017/connect_mongodb_session_test',
-      { serverSelectionTimeoutMS: 5000 }
+      { serverSelectionTimeoutMS: 5000 },{ useUnifiedTopology: true}, { useNewUrlParser: true }, { connectTimeoutMS: 30000 }, { keepAlive: 1}
     );
-    underlyingDb = client.db('connect_mongodb_session_test');
+    underlyingDb = await client.db('connect_mongodb_session_test');
+//    log('delete Many');
     await client.db('connect_mongodb_session_test').collection('mySessions').deleteMany({});
+//    log('delete many done');
+    await new Promise(resolve => setTimeout(resolve, 200));
+//    console.log("---BEFORE EACH ---------");
   });
 
-  afterEach(function() {
+  afterEach(async function() {
     server && server.close();
+    await new Promise(resolve => setTimeout(resolve, 50));
+//    console.log("---AFTER EACH ---------");
   });
 
   /**
@@ -53,6 +61,8 @@ describe('MongoDBStore', function() {
       uri: 'mongodb://127.0.0.1:27017/connect_mongodb_session_test',
       collection: 'mySessions'
     });
+    await new Promise(resolve => setTimeout(resolve, 50));
+//    console.log("---MongoDBStore ---------");
     // acquit:ignore:start
 
     store.on('connected', function() {
@@ -71,7 +81,7 @@ describe('MongoDBStore', function() {
       // acquit:ignore:end
     });
 
-    app.use(require('express-session')({
+    app.use(session({
       secret: 'This is a secret',
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
@@ -88,21 +98,34 @@ describe('MongoDBStore', function() {
       res.send('Hello ' + JSON.stringify(req.session));
     });
 
-    server = app.listen(3000);
+    server = app.listen(3000, function() {
+      console.log('ready to go!');});
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+//    console.log("----------------------");
 
     let count = await underlyingDb.collection('mySessions').countDocuments({});
+//    log('count '+count)
     assert.equal(0, count);
-
+//    log('get express / endpoint')
     let response = await superagent.get('http://127.0.0.1:3000');
+//    log('cookie count '+response.headers['set-cookie'].length)
     assert.equal(1, response.headers['set-cookie'].length);
     var cookie = require('cookie').parse(response.headers['set-cookie'][0]);
     assert.ok(cookie['connect.sid']);
     count = await underlyingDb.collection('mySessions').countDocuments({});
+//    log('count session db '+count)    
     assert.equal(count, 1);
+//    log('get express / endpoint with cookie set')
     response = await superagent.get('http://127.0.0.1:3000').set('Cookie', 'connect.sid=' + cookie['connect.sid']);
     assert.ok(!response.headers['set-cookie']);
+//    log('clearing store');
     await store.clear();
+    await new Promise(resolve => setTimeout(resolve, 500));
+//    console.log("----------------------");
+//    log('store clear');
     count = await underlyingDb.collection('mySessions').countDocuments({});
+//    log('count '+count)
     assert.equal(count, 0);
   });
 
@@ -157,7 +180,8 @@ describe('MongoDBStore', function() {
       res.send('Hello ' + JSON.stringify(req.session));
     });
 
-    server = app.listen(3000);
+    server = app.listen(3000, function() {
+      console.log('ready to go!');});
   });
 
   /**

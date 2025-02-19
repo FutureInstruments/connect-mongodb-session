@@ -1,6 +1,7 @@
 'use strict';
 
 const Archetype = require('archetype');
+const { log } = require('console');
 const EventEmitter = require('events').EventEmitter;
 const mongodb = require('mongodb');
 
@@ -90,18 +91,30 @@ module.exports = function(connect) {
       client.db(options.databaseName);
     this.db = db;
     this.collection = db.collection(this.options.collection);
+
     this.initialConnectionPromise = client.connect().
-      then(() => {
+      then(async () => {
         const expiresIndex = {};
         expiresIndex[options.expiresKey] = 1
 
-        return this.collection.
+        await new Promise(resolve => setTimeout(resolve, 300));
+        console.log("----------START ------------");
+
+        await console.log('check if index exist');
+        const isIndexExist = await this.collection.indexExists(expiresIndex);
+        if (isIndexExist === true) {
+          await console.log('found index');
+          return 0;
+        }
+        await console.log('creating index')
+        return await this.collection.
           createIndex(expiresIndex, { expireAfterSeconds: options.expiresAfterSeconds }).
           catch(err => {
             const e = new Error('Error creating index: ' + err.message);
             return _this._errorHandler(e, callback);
           });
       }).then(() => {
+        log('connected');
         process.nextTick(() => callback && callback());
         this._emitter.emit('connected');
         return client;
