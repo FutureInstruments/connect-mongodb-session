@@ -44,6 +44,11 @@ const OptionsType = new Archetype({
     $type: 'number',
     $required: true,
     $default: 0
+  },
+  forceIndex: {
+    $type: 'boolean',
+    $required: false,
+    default: false
   }
 }).compile('OptionsType');
 
@@ -98,15 +103,32 @@ module.exports = function(connect) {
         expiresIndex[options.expiresKey] = 1
 
         await new Promise(resolve => setTimeout(resolve, 300));
-        console.log("----------START ------------");
+//        console.log("----------START ------------");
 
-        await console.log('check if index exist');
-        const isIndexExist = await this.collection.indexExists(expiresIndex);
+//        console.log(this.options)
+        // await console.log('list indexes');
+        // const indexList = await this.collection.listIndexes().toArray();
+        // await new Promise(resolve => setTimeout(resolve, 300));
+        // await log(indexList);
+        // await console.log('check if index exist ');
+        // await log(this.options.expiresKey);
+        const isIndexExist = await this.collection.indexExists(this.options.expiresKey+'_1');
+//        await log('isIndexExist '+isIndexExist);
         if (isIndexExist === true) {
-          await console.log('found index');
-          return 0;
+//          await console.log('found index');
+//          await log(this.options.forceIndex)
+          if(typeof this.options.forceIndex === 'undefined' || this.options.forceIndex === 'false')
+          {
+//            console.log('keep index return 0')
+            return 0;
+          }
+          else
+          {
+            console.log('force drop index')
+            await this.collection.dropIndex(this.options.expiresKey+'_1')
+          }
         }
-        await console.log('creating index')
+//        await console.log('creating index')
         return await this.collection.
           createIndex(expiresIndex, { expireAfterSeconds: options.expiresAfterSeconds }).
           catch(err => {
@@ -114,7 +136,7 @@ module.exports = function(connect) {
             return _this._errorHandler(e, callback);
           });
       }).then(() => {
-        log('connected');
+//        log('connected');
         process.nextTick(() => callback && callback());
         this._emitter.emit('connected');
         return client;

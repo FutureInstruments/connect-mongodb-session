@@ -30,8 +30,11 @@ describe('MongoDBStore', function() {
 
   afterEach(async function() {
     server && server.close();
-    await new Promise(resolve => setTimeout(resolve, 50));
-//    console.log("---AFTER EACH ---------");
+    await new Promise(resolve => setTimeout(resolve, 100));
+//    await console.log("---Drop all indexes ---------");
+    await underlyingDb.collection('mySessions').dropIndexes();
+    await new Promise(resolve => setTimeout(resolve, 100));
+//    await console.log("---AFTER EACH ---------");
   });
 
   /**
@@ -61,7 +64,7 @@ describe('MongoDBStore', function() {
       uri: 'mongodb://127.0.0.1:27017/connect_mongodb_session_test',
       collection: 'mySessions'
     });
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 100));
 //    console.log("---MongoDBStore ---------");
     // acquit:ignore:start
 
@@ -74,7 +77,7 @@ describe('MongoDBStore', function() {
 
     // Catch errors
     store.on('error', function(error) {
-      console.log(error);
+      console.log('error '+error);
       // acquit:ignore:start
       assert.ifError(error);
 	    assert.ok(false);
@@ -195,6 +198,79 @@ describe('MongoDBStore', function() {
     var store = new MongoDBStore({
       uri: 'mongodb://127.0.0.1:27017/connect_mongodb_session_test',
       collection: 'mySessions',
+
+      // By default, sessions expire after 2 weeks. The `expires` option lets
+      // you overwrite that by setting the expiration in milliseconds
+      expires: 1000 * 60 * 60 * 24 * 30, // 30 days in milliseconds
+
+      // Lets you set options passed to `MongoClient.connect()`. Useful for
+      // configuring connectivity or working around deprecation warnings.
+      connectionOptions: {
+        serverSelectionTimeoutMS: 10000
+      }
+    });
+  });
+
+  /**
+   * There are several other options you can pass to `new MongoDBStore()`:
+   */
+  it('test forceExpire false options', function() {
+    var express = require('express');
+    var session = require('express-session');
+    var MongoDBStore = require('connect-mongodb-session')(session);
+
+    var store = new MongoDBStore({
+      uri: 'mongodb://127.0.0.1:27017/connect_mongodb_session_test',
+      collection: 'mySessions',
+      expiresAfterSeconds: 60 * 60 * 24 * 30,
+      forceIndex: false,
+
+      // By default, sessions expire after 2 weeks. The `expires` option lets
+      // you overwrite that by setting the expiration in milliseconds
+      expires: 1000 * 60 * 60 * 24 * 30, // 30 days in milliseconds
+
+      // Lets you set options passed to `MongoClient.connect()`. Useful for
+      // configuring connectivity or working around deprecation warnings.
+      connectionOptions: {
+        serverSelectionTimeoutMS: 10000
+      }
+    });
+  });
+
+  /**
+   * There are several other options you can pass to `new MongoDBStore()`:
+   */
+  it('test forceExpire true options while creating 2 stores', async function() {
+    var express = require('express');
+    var session = require('express-session');
+    var MongoDBStore = require('connect-mongodb-session')(session);
+
+    var store = await new MongoDBStore({
+      uri: 'mongodb://127.0.0.1:27017/connect_mongodb_session_test',
+      collection: 'mySessions',
+      expiresAfterSeconds: 60 * 60 * 24 * 30,
+      forceIndex: true,
+
+      // By default, sessions expire after 2 weeks. The `expires` option lets
+      // you overwrite that by setting the expiration in milliseconds
+      expires: 1000 * 60 * 60 * 24 * 30, // 30 days in milliseconds
+
+      // Lets you set options passed to `MongoClient.connect()`. Useful for
+      // configuring connectivity or working around deprecation warnings.
+      connectionOptions: {
+        serverSelectionTimeoutMS: 10000
+      }
+    });
+
+    log('wait before creating a new store');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    log('creating a new store');
+
+    var store = await new MongoDBStore({
+      uri: 'mongodb://127.0.0.1:27017/connect_mongodb_session_test',
+      collection: 'mySessions',
+      expiresAfterSeconds: 60 * 60 * 24 * 60,
+      forceIndex: true,
 
       // By default, sessions expire after 2 weeks. The `expires` option lets
       // you overwrite that by setting the expiration in milliseconds
