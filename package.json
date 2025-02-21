@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "archetype": "0.13.x",
-    "mongodb": "5.x",
+    "mongodb": "4.17.2",
     "bson" : "4.7.2"
   },
   "devDependencies": {
