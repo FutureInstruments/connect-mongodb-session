@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "archetype": "0.13.x",
-    "mongodb": "5.x || 6.0"
+    "mongodb": "5.x || 6.0",
+    "bson" : "4.7.2"
   },
   "devDependencies": {
     "acquit": "1.0.5",
@@ -29,8 +30,7 @@
     "mocha": "4.x",
     "sinon": "17.0.1",
     "strawman": "0.0.1",
-    "superagent": "3.x",
-    "bson" : "4.7.2"
+    "superagent": "3.x"
   },
   "main": "index.js",
   "scripts": {
