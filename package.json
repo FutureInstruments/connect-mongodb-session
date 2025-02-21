@@ -29,7 +29,8 @@
     "mocha": "4.x",
     "sinon": "17.0.1",
     "strawman": "0.0.1",
-    "superagent": "3.x"
+    "superagent": "3.x",
+    "bson" : "4.7.2"
   },
   "main": "index.js",
   "scripts": {
