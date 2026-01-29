@@ -66,7 +66,7 @@ const OptionsType = new Archetype({
 module.exports = function(connect) {
   const Store = connect.Store || connect.session.Store;
 
-  const MongoDBStore = async function(options, callback) {
+  const MongoDBStore = function(options, callback) {
     if (!(this instanceof MongoDBStore)) {
       return new MongoDBStore(options, callback);
     }
@@ -95,7 +95,7 @@ module.exports = function(connect) {
       client.db() :
       client.db(options.databaseName);
     this.db = db;
-    const names = await this.db.listCollections({}, { nameOnly: true }).toArray();
+    this.db.listCollections({}, { nameOnly: true }).toArray().then(names => {
     console.log('db collection list:', names);
     let alreadyExist = false;
     console.log('### existing collections:');
@@ -167,6 +167,10 @@ module.exports = function(connect) {
           throw e;
         }
       });
+    }).catch(error => {
+      const e = new Error('Error listing collections: ' + error.message);
+      _this._errorHandler(e, callback);
+    });
   };
 
   MongoDBStore.prototype = Object.create(Store.prototype);
