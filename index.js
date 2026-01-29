@@ -95,6 +95,8 @@ module.exports = function(connect) {
       client.db() :
       client.db(options.databaseName);
     this.db = db;
+    const createColl = db.createCollection(this.options.collection);
+    console.log('create collection '+createColl);
     this.collection = db.collection(this.options.collection);
 
     this.initialConnectionPromise = client.connect().
