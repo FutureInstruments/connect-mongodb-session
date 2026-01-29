@@ -95,9 +95,22 @@ module.exports = function(connect) {
       client.db() :
       client.db(options.databaseName);
     this.db = db;
-    const createColl = db.createCollection(this.options.collection);
-    console.log('create collection '+createColl);
-    this.collection = db.collection(this.options.collection);
+    const names = this.db.listCollections({}, { nameOnly: true });
+    alreadyExist = false;
+    console.log('existing collections:');
+    for await (const doc of names) {
+      console.log(doc)
+      if (doc.name === this.options.collection) {
+        alreadyExist = true;
+      }
+    }
+    if(alreadyExist === false)
+    {
+      console.log('collection does not exist, will create it');
+      const createColl = this.db.createCollection(this.options.collection);
+      console.log('create collection '+createColl);
+    }
+    this.collection = this.db.collection(this.options.collection);
 
     this.initialConnectionPromise = client.connect().
       then(async () => {
