@@ -98,11 +98,11 @@ module.exports = function(connect) {
     const names = this.db.listCollections({}, { nameOnly: true }).toArray();
     console.log('db collection list:', names);
     let alreadyExist = false;
-    console.log('existing collections:');
+    console.log('### existing collections:');
     if(names)
     {
       for (const doc of names) {
-        console.log(doc)
+        console.log(" - ", doc)
         if (doc.name === this.options.collection) {
           alreadyExist = true;
         }
