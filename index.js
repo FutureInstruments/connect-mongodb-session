@@ -95,7 +95,7 @@ module.exports = function(connect) {
       client.db() :
       client.db(options.databaseName);
     this.db = db;
-    const names = this.db.listCollections({}, { nameOnly: true });
+    const names = this.db.listCollections({}, { nameOnly: true }).toArray();
     console.log('db collection list:', names);
     let alreadyExist = false;
     console.log('existing collections:');
