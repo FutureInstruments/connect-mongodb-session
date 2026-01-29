@@ -96,12 +96,16 @@ module.exports = function(connect) {
       client.db(options.databaseName);
     this.db = db;
     const names = this.db.listCollections({}, { nameOnly: true });
+    console.log('db collection list:', names);
     let alreadyExist = false;
     console.log('existing collections:');
-    for (const doc of names) {
-      console.log(doc)
-      if (doc.name === this.options.collection) {
-        alreadyExist = true;
+    if(names)
+    {
+      for (const doc of names) {
+        console.log(doc)
+        if (doc.name === this.options.collection) {
+          alreadyExist = true;
+        }
       }
     }
     if(alreadyExist === false)
