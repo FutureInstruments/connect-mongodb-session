@@ -66,7 +66,7 @@ const OptionsType = new Archetype({
 module.exports = function(connect) {
   const Store = connect.Store || connect.session.Store;
 
-  const MongoDBStore = function(options, callback) {
+  const MongoDBStore = async function(options, callback) {
     if (!(this instanceof MongoDBStore)) {
       return new MongoDBStore(options, callback);
     }
@@ -95,29 +95,25 @@ module.exports = function(connect) {
       client.db() :
       client.db(options.databaseName);
     this.db = db;
-
-    (async () => {
-      const names = await this.db.listCollections({}, { nameOnly: true }).toArray();
-      console.log('db collection list:', names);
-      let alreadyExist = false;
-      console.log('### existing collections:');
-      if(names)
-      {
-        for (const doc of names) {
-          console.log(" - ", doc)
-          if (doc.name === this.options.collection) {
-            alreadyExist = true;
-          }
+    const names = await this.db.listCollections({}, { nameOnly: true }).toArray();
+    console.log('db collection list:', names);
+    let alreadyExist = false;
+    console.log('### existing collections:');
+    if(names)
+    {
+      for (const doc of names) {
+        console.log(" - ", doc)
+        if (doc.name === this.options.collection) {
+          alreadyExist = true;
         }
       }
-      if(alreadyExist === false)
-      {
-        console.log('collection does not exist, will create it');
-        const createColl = this.db.createCollection(this.options.collection);
-        console.log('create collection '+createColl);
-      }
-    })();
-    
+    }
+    if(alreadyExist === false)
+    {
+      console.log('collection does not exist, will create it');
+      const createColl = this.db.createCollection(this.options.collection);
+      console.log('create collection '+createColl);
+    }
     this.collection = this.db.collection(this.options.collection);
 
     this.initialConnectionPromise = client.connect().
@@ -171,7 +167,6 @@ module.exports = function(connect) {
           throw e;
         }
       });
-    })();
   };
 
   MongoDBStore.prototype = Object.create(Store.prototype);
