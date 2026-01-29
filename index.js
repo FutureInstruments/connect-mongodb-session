@@ -98,7 +98,7 @@ module.exports = function(connect) {
     const names = this.db.listCollections({}, { nameOnly: true });
     alreadyExist = false;
     console.log('existing collections:');
-    for await (const doc of names) {
+    for (const doc of names) {
       console.log(doc)
       if (doc.name === this.options.collection) {
         alreadyExist = true;
